@@ -1,0 +1,6 @@
+Revision history for Perl extension Net::DownloadMirror.
+
+0.01  Wed Jan  4 09:55:21 2006
+	- original version; created by h2xs 1.23 with options
+		-AXn Net::DownloadMirror
+
