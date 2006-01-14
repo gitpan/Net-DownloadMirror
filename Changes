@@ -4,3 +4,9 @@ Revision history for Perl extension Net::DownloadMirror.
 	- original version; created by h2xs 1.23 with options
 		-AXn Net::DownloadMirror
 
+0.02 Fri Jan 13 18:41:26 2006
+ 	- remove Exporter.pm, also in future nothing will be to be exported
+ 	- change our $VERSION in $Net::DownloadMirror::VERSION
+ 	- change our @ISA in @Net::DownloadMirror
+ 	- some bugfix in Net-DownloadMirror.t
+

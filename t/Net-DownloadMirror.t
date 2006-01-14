@@ -6,7 +6,7 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 # use Test::More "no_plan";
- use Test::More tests => 241;
+ use Test::More tests => 295;
 BEGIN { use_ok('Net::DownloadMirror') };
 
 #########################

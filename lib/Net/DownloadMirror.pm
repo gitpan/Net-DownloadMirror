@@ -1,39 +1,19 @@
-package Net::DownloadMirror;
-
-use 5.009002;
-use strict;
-use warnings;
-use Net::MirrorDir;
-use File::Basename;
-use File::Path;
-use Storable;
-use vars '$AUTOLOAD';
-
-require Exporter;
-
-our @ISA = qw(Exporter Net::MirrorDir);
-
-# Items to export into callers namespace by default. Note: do not export
-# names by default without a very good reason. Use EXPORT_OK instead.
-# Do not simply export all your public functions/methods/constants.
-
-# This allows declaration	use Net::DownloadMirror ':all';
-# If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
-# will save memory.
-our %EXPORT_TAGS = ( 'all' => [ qw(
-	
-) ] );
-
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
-
-our @EXPORT = qw(
-	
-);
-
-our $VERSION = '0.01';
-
-
-# Preloaded methods go here.
+#*** DownloadMirror.pm ***#
+# Copyright (C) 2006 Torsten Knorr
+# create-soft@tiscali.de
+# All rights reserved!
+#------------------------------------------------
+ package Net::DownloadMirror;
+#------------------------------------------------
+ use strict;
+ use warnings;
+ use Net::MirrorDir;
+ use File::Basename;
+ use File::Path;
+ use Storable;
+#------------------------------------------------
+ @Net::DownloadMirror::ISA = qw(Exporter Net::MirrorDir);
+ $Net::DownloadMirror::VERSION = '0.02';
 #-------------------------------------------------
  sub Update
  	{
@@ -359,6 +339,7 @@ None by default.
 
 Net::MirrorDir
 Net::UploadMirror
+Tk::Mirror
 http://www.planet-interkom.de/t.knorr/index.html
 
 =head1 FILES
