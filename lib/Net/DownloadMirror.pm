@@ -13,7 +13,7 @@
  use Storable;
 #------------------------------------------------
  @Net::DownloadMirror::ISA = qw(Exporter Net::MirrorDir);
- $Net::DownloadMirror::VERSION = '0.02';
+ $Net::DownloadMirror::VERSION = '0.03';
 #-------------------------------------------------
  sub Update
  	{

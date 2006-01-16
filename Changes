@@ -10,3 +10,6 @@ Revision history for Perl extension Net::DownloadMirror.
  	- change our @ISA in @Net::DownloadMirror
  	- some bugfix in Net-DownloadMirror.t
 
+0.03 Mon Jan 16 19:24:13 2006
+ 	- remove "use 5.009002;" in Makefile.PL
+

@@ -1,4 +1,4 @@
-Net-DownloadMirror version 0.02
+Net-DownloadMirror version 0.03
 ===============================
 
 This module is for mirroring a remote-directory to a local-directory via FTP.
