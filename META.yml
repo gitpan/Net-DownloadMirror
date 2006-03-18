@@ -1,12 +1,14 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Net-DownloadMirror
-version:      0.03
+version:      0.04
 version_from: lib/Net/DownloadMirror.pm
 installdirs:  site
 requires:
-    File::Path:                    Storable
-    Net::MirrorDir:                File::Basename
+    File::Basename:                0
+    File::Path:                    0
+    Net::MirrorDir:                0
+    Storable:                      0
 
 distribution_type: module
 generated_by: ExtUtils::MakeMaker version 6.25

@@ -12,8 +12,8 @@
  use File::Path;
  use Storable;
 #------------------------------------------------
- @Net::DownloadMirror::ISA = qw(Exporter Net::MirrorDir);
- $Net::DownloadMirror::VERSION = '0.03';
+ @Net::DownloadMirror::ISA = qw(Net::MirrorDir);
+ $Net::DownloadMirror::VERSION = '0.04';
 #-------------------------------------------------
  sub Update
  	{
@@ -265,6 +265,12 @@ from the local directory set this attribute to "enable", default "disabled"
 =item connection
 takes a Net::FTP-object you should not use that,
 it is produced automatically by the NetMirrorDir-object
+Following functions of the used FTP-object should be identical
+to the Net::FTP-object functions.
+ 	cwd(path), 
+ 	size(file), 
+ 	mdtm(file), 
+ 	ls(path),
 
 =item exclusions
 a reference to a list of strings interpreted as regular-expressios ("regex") 
@@ -355,7 +361,7 @@ Maybe you'll find some. Let me know.
 
 =head1 AUTHOR
 
-Torsten Knorr, E<lt>knorrcpan@tiscali.deE<gt>
+Torsten Knorr, E<lt>torstenknorr@tiscali.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
@@ -367,6 +373,8 @@ at your option, any later version of Perl 5 you may have available.
 
 
 =cut
+
+
 
 
 
