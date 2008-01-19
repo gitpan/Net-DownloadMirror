@@ -1,19 +1,36 @@
 #*** DownloadMirror.pm ***#
-# Copyright (C) 2006 Torsten Knorr
+# Copyright (C) 2006 - 2008 by Torsten Knorr
 # create-soft@tiscali.de
 # All rights reserved!
 #------------------------------------------------
  package Net::DownloadMirror;
 #------------------------------------------------
  use strict;
- use warnings;
  use Net::MirrorDir;
  use File::Basename;
  use File::Path;
  use Storable;
 #------------------------------------------------
  @Net::DownloadMirror::ISA = qw(Net::MirrorDir);
- $Net::DownloadMirror::VERSION = '0.04';
+ $Net::DownloadMirror::VERSION = '0.05';
+#-------------------------------------------------
+ sub _Init
+ 	{
+ 	my ($self, %arg) = @_;
+ 	$self->{_file_name} = $arg{file_name} || "lastmodified_remote";
+ 	if(-f $self->{_file_name})
+ 		{
+ 		$self->{_last_modified} = retrieve($self->{_file_name});
+ 		}
+ 	else
+ 		{
+ 		$self->{_last_modified} = {};
+ 		store($self->{_last_modified}, $self->{_file_name});
+ 		warn("\nno information of the files last modified times\n");
+ 		return(0);
+ 		}
+ 	return(1);
+ 	}
 #-------------------------------------------------
  sub Update
  	{
@@ -70,54 +87,31 @@
  		}
  	$self->StoreFiles($ref_a_modified_remote_files);
  	$self->Quit();
- 	return 1;
+ 	return(1);
  	}
 #-------------------------------------------------
  sub CheckIfModified
  	{
  	my ($self, $ref_h_remote_files) = @_;
  	my (@modified_files, $ref_last_modified, $modified_time);
- 	return if(!(defined($self->{_connection})));
- 	if(-f "lastmodified_remote")
- 		{
- 		$ref_last_modified = retrieve("lastmodified_remote");
- 		}
- 	else
- 		{
- 		warn("no information of the last modified time");
- 		return [keys(%{$ref_h_remote_files})];
- 		}
+ 	return(0) if(!(defined($self->{_connection})));
  	for(keys(%{$ref_h_remote_files}))
  		{
  		$modified_time = $self->{_connection}->mdtm($_);
- 		if(defined($ref_last_modified->{$_}) and $modified_time)
+ 		if(defined($self->{_last_modified}{$_}) and $modified_time)
  			{
- 			if(!($ref_last_modified->{$_} eq $modified_time))
- 				{
- 				push(@modified_files, $_) ;
- 				}
+ 			next if($self->{_last_modified}{$_} eq $modified_time);
  			}
- 		elsif($modified_time)
- 			{
- 			push(@modified_files, $_);
- 			}
+ 		push(@modified_files, $_) if($modified_time);
  		}
- 	return \@modified_files;
+ 	return(\@modified_files);
  	}
 #-------------------------------------------------
  sub StoreFiles
  	{
  	my ($self, $ref_a_files) = @_;
  	my ($l_path, $r_path, $value, $ref_last_modified);
- 	return if(!(defined($self->{_connection})));
- 	if(-f "lastmodified_remote")
- 		{
- 		$ref_last_modified = retrieve("lastmodified_remote");
- 		}
- 	else
- 		{
- 		$ref_last_modified = {};
- 		}
+ 	return(0) if(!(defined($self->{_connection})));
  	for(@{$ref_a_files})
  		{
  		$l_path = $r_path = $_;
@@ -131,10 +125,10 @@
  		binmode(F);
  		print(F $value);
  		close(F);
- 		$ref_last_modified->{$r_path} = $self->{_connection}->mdtm($r_path);
+ 		$self->{_last_modified}{$r_path} = $self->{_connection}->mdtm($r_path);
  		}
- 	store($ref_last_modified, "lastmodified_remote");
- 	return 1;
+ 	store($self->{_last_modified}, $self->{_file_name});
+ 	return(1);
  	}
 #-------------------------------------------------
  sub MakeDirs
@@ -147,44 +141,36 @@
  		$l_dir =~ s!^$self->{_remotedir}!$self->{_localdir}!;
  		mkpath($l_dir) if(!(-d $l_dir));
  		}
- 	return 1;
+ 	return(1);
  	}
 #-------------------------------------------------
  sub DeleteFiles
  	{
  	my ($self, $ref_a_files) = @_;
 	my ($l_path, $r_path, $ref_last_modified);
- 	return if(!($self->{_delete} eq "enable"));
- 	if(-f "lastmodified_remote")
- 		{ 
- 		$ref_last_modified = retrieve("lastmodified_remote");
- 		}
- 	else
- 		{
- 		$ref_last_modified = {};
- 		}
+ 	return(0) if(!($self->{_delete} eq "enable"));
  	for(@{$ref_a_files})
  		{
  		$l_path = $r_path = $_; 
  		$r_path =~ s!^$self->{_localdir}!$self->{_remotedir}!;
  		next if(!(-f $l_path));
  		warn("can not unlink : $l_path\n") if(!(unlink($l_path)));
- 		delete($ref_last_modified->{$r_path}) if(defined($ref_last_modified->{$r_path}));
+ 		delete($self->{_last_modified}{$r_path}) if(defined($self->{_last_modified}{$r_path}));
  		}
- 	store($ref_last_modified, "lastmodified_remote");
- 	return 1;
+ 	store($self->{_last_modified}, $self->{_file_name});
+ 	return(1);
  	} 
 #-------------------------------------------------
  sub RemoveDirs
  	{
  	my ($self, $ref_a_files) = @_;
- 	return if(!($self->{_delete} eq "enable"));
+ 	return(0) if(!($self->{_delete} eq "enable"));
  	for(@{$ref_a_files})
  		{
  		next if(!(-d $_));
  		rmtree($_, $self->{_debug}, 1);
  		}
- 	return 1;
+ 	return(1);
  	}
 #------------------------------------------------
 1;
@@ -206,7 +192,7 @@ Net::DownloadMirror - Perl extension for mirroring a remote location via FTP to 
  $um->Update();
  
  or more detailed
- my $um = Net::DownloadMirror->new(
+ my $md = Net::DownloadMirror->new(
  	ftpserver		=> "my_ftp.hostname.com",
  	usr		=> "my_ftp_usr_name",
  	pass		=> "my_ftp_password",
@@ -216,10 +202,18 @@ Net::DownloadMirror - Perl extension for mirroring a remote location via FTP to 
  	timeout		=> 60 # default 30
  	delete		=> "enable" # default "disabled"
  	connection	=> $ftp_object, # default undef
+# "exclusions" default empty arrayreferences [ ]
  	exclusions	=> ["private.txt", "Thumbs.db", ".sys", ".log"],
+# "subset" default empty arrayreferences [ ]
+ 	subset		=> [".txt, ".pl", ".html", "htm", ".gif", ".jpg", ".css", ".js", ".png"],
+# or substrings in pathnames
+#	exclusions	=> ["psw", "forbidden_code"]
+#	subset		=> ["name", "my_files"]
+# or you can use regular expressions
+# 	exclusinos	=> [qr/SYSTEM/i, $regex]
+# 	subset		=> {qr/(?i:HOME)(?i:PAGE)?/, $regex]
+ 	file_name	=> "modified_times",
  	);
- $um->SetLocalDir("home/nameB/homepageB");
- print("hostname : ", $um->get_ftpserver(), "\n");
  $um->Update();
 
 =head1 DESCRIPTION
@@ -230,95 +224,19 @@ uploaded or changed in the net. It is not developt for mirroring large archivs.
 But there are not in principle any limits.
 
 =head1 Constructor and Initialization
-
 =item (object) new (options)
-
-=head2 required optines
-
-=item ftpserver
-the hostname of the ftp-server
-
-=item usr	
-the username for authentification
-
-=item pass
-password for authentification
-
-=head2 optional optiones
-
-=item localdir
-local directory where the downloaded or updated files are stored, default '.'
-
-=item remotedir
-remote location from where the files are downloaded, default '/' 
-
-=item debug
-set it true for more information about the download-process, default 1 
-
-=item timeout
-the timeout for the ftp-serverconnection
-
-=item delete
-if you want files or directories removed on the remote server also removed 
-from the local directory set this attribute to "enable", default "disabled"
-
-=item connection
-takes a Net::FTP-object you should not use that,
-it is produced automatically by the NetMirrorDir-object
-Following functions of the used FTP-object should be identical
-to the Net::FTP-object functions.
- 	cwd(path), 
- 	size(file), 
- 	mdtm(file), 
- 	ls(path),
-
-=item exclusions
-a reference to a list of strings interpreted as regular-expressios ("regex") 
-matching to something in the local pathnames, 
-you do not want to delete, default empty list [ ]
-It is recommended that the local directory no critical files contains!!!
-
-=item (value) get_option (void)
-=item (1)  set_option (value)
-The functions are generated by AUTOLOAD for all options.
-The syntax is not case-sensitive and the character '_' is optional.
+ Net::DownloadMirror is a derived class from Net::MirrorDir.
+ For detailed information about constructor or options
+ read the documentation of Net::MirrorDir.
 
 =head2 methods
 
+=item (1) _Init(%arg)
+ This function is called by the constructor.
+ You do not need to call this function by yourself.
+
 =item (1) Update (void)
-call this function for mirroring automatically, recommended!!!
-
-=item (ref_hash_local_files, ref_hash_local_dirs) ReadLocalDir (void)
-Returns two hashreferences first  the local-files, second the local-directorys
-found in the directory, given by the DownloadMirror-object,
-uses the attribute "localdir". 
-The values are in the keys.
-
-=item (ref_hash_remotefiles, ref_hash_remote_dirs) ReadRemoteDir (void)
-Returns two hashreferences first the remote-files, second the remote-directorys
-found in the directory, given by the DownloadMirror-object,
-uses the attribute "remotedir". 
-The values are in the keys.
-
-=item (1) Connect (void)
-Makes the connection to the ftp-server.
-uses the attributes "ftpserver", "usr" and "pass",
-given by the DownloadMirror-object.
-
-=item (1) Quit (void)
-Closes the connection with the ftp-server.
-
-=item (ref_hash_local_paths, ref_hash_remote_paths) LocalNotInRemote (ref_list_new_paths)
-Takes two hashreferences, given by the functions ReadLocalDir(); and ReadRemoteDir();
-to compare with each other. Returns a reference of a list with files or directorys found in 
-the local directory but not in the remote location. Uses the attribute "localdir" and 
-"remotedir", given by the DownloadMirror-object.
-
-=item (ref_hash_local_paths, ref_hash_remote_paths) RemoteNotInLocal (ref_list_deleted_paths)
-Takes two hashreferences, given by the functions ReadLocalDir(); and ReadRemoteDir();
-to compare with each other. Returns a reference of a list with files or directorys found in 
-the remote location but not in the local directory. Uses the attribure "localdir" and 
-"remotedir" given by the DownloadMirror-object.
+ Call this function for mirroring automatically, recommended!!!
 
 =item (ref_hash_modified_files) CheckIfModified (ref_list_local_files)
 Takes a hashreference of remote files to compare the last modification stored in a file
@@ -336,7 +254,12 @@ Takes a listreference of files to delete in the local directory.
 =item (1) RemoveDirs (ref_list_paths)
 Takes a listreference of directories to remove in the local directory.
 
+=head2 optional optiones
 
+=item file_name
+ The name of the file in which the last modified times will be stored.
+ default = "lastmodified_remote"
+ 
 =head2 EXPORT
 
 None by default.
@@ -359,13 +282,17 @@ File::Path
 
 Maybe you'll find some. Let me know.
 
+=head1 REPORTING BUGS
+
+When reporting bugs/problems please include as much information as possible.
+
 =head1 AUTHOR
 
-Torsten Knorr, E<lt>torstenknorr@tiscali.deE<gt>
+Torsten Knorr, E<lt>create-soft@tiscali.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006 by Torsten Knorr
+Copyright (C) 2006 - 2008 by Torsten Knorr
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.9.2 or,
@@ -373,12 +300,5 @@ at your option, any later version of Perl 5 you may have available.
 
 
 =cut
-
-
-
-
-
-
-
 
 

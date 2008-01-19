@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::DownloadMirror.
 
+0.05 Sat Jan 19 18:35:15 2008
+ 	- insert a option for the file name in which the last modified times will be stored
+
 0.04 Sat Mar 18 20:25:01 2006
  	- bugfix in Makefile.PL
 
@@ -15,6 +18,7 @@ Revision history for Perl extension Net::DownloadMirror.
 0.01  Wed Jan  4 09:55:21 2006
 	- original version; created by h2xs 1.23 with options
 		-AXn Net::DownloadMirror
+
 
 
 

@@ -1,4 +1,4 @@
-Net-DownloadMirror version 0.04
+Net-DownloadMirror version 0.05
 ===============================
 
 This module is for mirroring a remote-directory to a local-directory via FTP.
@@ -26,13 +26,14 @@ This module requires these other modules and libraries:
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2006 by Torsten Knorr
+Copyright (C) 2006 - 2008 by Torsten Knorr
  create-soft@tiscali.de
  http://www.planet-interkom.de/t.knorr/index.html
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.9.2 or,
 at your option, any later version of Perl 5 you may have available.
+
 
 
 
