@@ -1,5 +1,12 @@
 Revision history for Perl extension Net::DownloadMirror.
 
+0.06 Sun Feb  3 19:32:17 2008 
+ 	- check the connection in a better way with function IsConnection()
+	- adjustment of the documentation
+ 	- bind attribute "filename"
+ 	- add some tests
+ 	- bugfix in StoreFiles()
+
 0.05 Sat Jan 19 18:35:15 2008
  	- insert a option for the file name in which the last modified times will be stored
 
@@ -18,6 +25,9 @@ Revision history for Perl extension Net::DownloadMirror.
 0.01  Wed Jan  4 09:55:21 2006
 	- original version; created by h2xs 1.23 with options
 		-AXn Net::DownloadMirror
+
+
+
 
 
 
