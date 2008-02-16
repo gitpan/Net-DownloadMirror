@@ -6,7 +6,7 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 # use Test::More "no_plan";
- use Test::More tests => 54;
+ use Test::More tests => 56;
 BEGIN { use_ok('Net::DownloadMirror') };
 
 #########################
@@ -75,13 +75,6 @@ BEGIN { use_ok('Net::DownloadMirror') };
  	}
  ok($count == 3);
 #-------------------------------------------------
-# tests for "filename"
- ok($mirror->GetFileName() eq "lastmodified_remote");
- ok($mirror->SetFileName("modtime"));
- ok($mirror->GetFileName() eq "modtime");
- ok(unlink("lastmodified_remote"));
- ok(unlink("modtime"));
-#-------------------------------------------------
 # tests for Net::DownloadMirror methods
  isa_ok($mirror, "Net::MirrorDir");
  isa_ok($mirror, "Net::DownloadMirror");
@@ -100,6 +93,19 @@ BEGIN { use_ok('Net::DownloadMirror') };
  can_ok($mirror, "RemoveDirs");
  ok(!$mirror->RemoveDirs([]));
  ok($mirror->SetDelete("disabled"));
+#-------------------------------------------------
+# tests for "filename"
+ ok($mirror->GetFileName() eq "lastmodified_remote");
+ ok($mirror->SetFileName("modtime"));
+ ok($mirror->GetFileName() eq "modtime");
+ ok(unlink("lastmodified_remote"));
+ ok(unlink("modtime"));
+#-------------------------------------------------
+# tests for "delete"
+ ok("disabled" eq $mirror->GetDelete());
+#-------------------------------------------------
+# tests for "current_modified"
+ ok("HASH" eq ref($mirror->GetCurrent_Modified()));
 #-------------------------------------------------
  SKIP:
  	{
@@ -132,4 +138,7 @@ BEGIN { use_ok('Net::DownloadMirror') };
  	ok($m->Update());
  	};
 #-------------------------------------------------
+
+
+
 

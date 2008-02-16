@@ -31,14 +31,15 @@
  use Storable;
 #------------------------------------------------
  @Net::DownloadMirror::ISA = qw(Net::MirrorDir);
- $Net::DownloadMirror::VERSION = '0.06';
+ $Net::DownloadMirror::VERSION = '0.07';
 #-------------------------------------------------
  sub _Init
  	{
  	my ($self, %arg) = @_;
  	tie($self->{_filename}, "Net::DownloadMirror::FileName", $self);
- 	$self->{_filename}	= $arg{filename}	|| "lastmodified_remote";
- 	$self->{_delete}	= $arg{delete}	|| "disabled",
+ 	$self->{_filename}		= $arg{filename}	|| "lastmodified_remote";
+ 	$self->{_delete}		= $arg{delete}	|| "disabled";
+ 	$self->{_current_modified}	= {};
  	return(1);
  	}
 #-------------------------------------------------
@@ -112,14 +113,16 @@
  	my ($self, $ref_h_remote_files) = @_;
  	return([]) if(!$self->IsConnection());
  	my (@modified_files, $modified_time);
- 	for(keys(%{$ref_h_remote_files}))
+ 	for my $path (keys(%{$ref_h_remote_files}))
  		{
- 		$modified_time = $self->{_connection}->mdtm($_);
- 		if(defined($self->{_last_modified}{$_}) and $modified_time)
+ 		$modified_time = $self->{_connection}->mdtm($path);
+ 		next if(!$modified_time);
+ 		$self->{_current_modified}{$path} = $modified_time;
+ 		if(defined($self->{_last_modified}{$path}))
  			{
- 			next if($self->{_last_modified}{$_} eq $modified_time);
- 			}
- 		push(@modified_files, $_) if($modified_time);
+ 			next if($self->{_last_modified}{$path} eq $modified_time);
+ 			} 
+ 		push(@modified_files, $path);
  		}
  	return(\@modified_files);
  	}
@@ -317,6 +320,11 @@ at your option, any later version of Perl 5 you may have available.
 
 
 =cut
+
+
+
+
+
 
 
 
