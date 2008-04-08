@@ -6,7 +6,7 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 # use Test::More "no_plan";
- use Test::More tests => 56;
+ use Test::More tests => 64;
 BEGIN { use_ok('Net::DownloadMirror') };
 
 #########################
@@ -80,7 +80,7 @@ BEGIN { use_ok('Net::DownloadMirror') };
  isa_ok($mirror, "Net::DownloadMirror");
  can_ok($mirror, "_Init");
  ok($mirror->_Init());
- can_ok($mirror, "Update");
+ can_ok($mirror, "Download");
  can_ok($mirror, "StoreFiles");
  ok(!$mirror->StoreFiles([]));
  can_ok($mirror, "CheckIfModified");
@@ -109,22 +109,48 @@ BEGIN { use_ok('Net::DownloadMirror') };
 #-------------------------------------------------
  SKIP:
  	{
-	print(STDERR "\nWould you like to  test the module with a ftp-server?[y|n]: ");
+ 	my $m = Net::DownloadMirror->new(
+ 		localdir		=> 'TestA',
+ 		remotedir	=> '/authors/id/K/KN/KNORR/Remote/TestA',
+ 		ftpserver		=> 'www.cpan.org',
+ 		usr		=> 'anonymous',
+ 		pass		=> 'create-soft@tiscali.de', 	
+ 		exclusions	=> ['CHECKSUMS']
+ 		);
+ 	skip("no tests with www.cpan.org\n", 8) unless($m->Connect());
+ 	ok($m->Download());
+ 	ok(-f $_) for(
+ 		'TestA/TestB/TestC/Dir1/test1.txt',
+ 		'TestA/TestB/TestC/Dir2/test2.txt',
+ 		'TestA/TestB/TestC/Dir2/test2.subset',
+ 		'TestA/TestB/TestC/Dir3/test3.txt',
+ 		'TestA/TestB/TestC/Dir4/test4.txt',
+ 		'TestA/TestB/TestC/Dir4/test4.exclusions',
+ 		'TestA/TestB/TestC/Dir5/test5.txt'
+ 		);
+ 	}
+#-------------------------------------------------
+ SKIP:
+ 	{
+	skip("no tests with user prompt\n", 2) if($ENV{AUTOMATED_TESTING});
+ 	my $oldfh = select(STDERR);
+ 	$| = 1;
+	print("\nWould you like to  test the module with a ftp-server?[y|n]: ");
  	my $response = <STDIN>;
  	skip("no tests with ftp-server\n", 2) if(!($response =~ m/^y/i));
- 	print(STDERR "\nPlease enter the hostname of the ftp-server: ");
+ 	print("\nPlease enter the hostname of the ftp-server: ");
  	my $s = <STDIN>;
  	chomp($s);
- 	print(STDERR "\nPlease enter your user name: ");
+ 	print("\nPlease enter your user name: ");
  	my $u = <STDIN>;
  	chomp($u);
- 	print(STDERR "\nPlease enter your password : ");
+ 	print("\nPlease enter your ftp-password : ");
  	my $p = <STDIN>;
  	chomp($p);
-	print(STDERR "\nPlease enter the local-directory : ");
+	print("\nPlease enter the local-directory : ");
  	my $l = <STDIN>;
  	chomp($l);
- 	print(STDERR "\nPease enter the remote-directory : ");
+ 	print("\nPease enter the remote-directory : ");
  	my $r = <STDIN>;
  	chomp($r);
  	ok(my $m = Net::DownloadMirror->new(
@@ -135,9 +161,13 @@ BEGIN { use_ok('Net::DownloadMirror') };
  		pass		=> $p, 	
  		filename		=> "mtimes"
  		));
- 	ok($m->Update());
- 	};
+ 	ok($m->Download());
+	select($oldfh);
+ 	}
 #-------------------------------------------------
+
+
+
 
 
 

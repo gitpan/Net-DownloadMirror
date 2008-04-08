@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::DownloadMirror.
 
+0.08 Sun Apr  6 09:24:04 2008 
+ 	- code improvements
+ 	- change function Update() to Download()
+	- skip tests with user prompt, if $ENV{AUTOMATED_TESTING} is true
+
 0.07 Wed Feb 13 19:00:04 2008 
  	- insert  the attribute "current_modified" to keep times,
  	 received from the function mdtm(), 
@@ -30,6 +35,9 @@ Revision history for Perl extension Net::DownloadMirror.
 0.01  Wed Jan  4 09:55:21 2006
 	- original version; created by h2xs 1.23 with options
 		-AXn Net::DownloadMirror
+
+
+
 
 
 

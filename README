@@ -1,9 +1,10 @@
-Net-DownloadMirror version 0.07
+Net-DownloadMirror version 0.08
 ===============================
 
 This module is for mirroring a remote-directory to a local-directory via FTP.
 For example websites, documentations or developmentstuff which ones were
-uploaded or changed in the net. It is not developt for mirroring large archivs.
+uploaded or changed in the net. Local files will be overwritten,
+also in case they are newer. It is not developt for mirroring large archivs.
 But there are not in principle any limits.
 
 INSTALLATION
@@ -21,7 +22,6 @@ This module requires these other modules and libraries:
 
  Net::MirrorDir
  Storable
- File::Basename
  File::Path
 
 COPYRIGHT AND LICENCE
@@ -33,6 +33,9 @@ Copyright (C) 2006 - 2008 by Torsten Knorr
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.9.2 or,
 at your option, any later version of Perl 5 you may have available.
+
+
+
 
 
 

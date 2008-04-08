@@ -25,13 +25,12 @@
 #-------------------------------------------------
  package Net::DownloadMirror;
 #------------------------------------------------
- use Net::MirrorDir;
- use File::Basename;
+ use Net::MirrorDir 0.18;
  use File::Path;
  use Storable;
 #------------------------------------------------
  @Net::DownloadMirror::ISA = qw(Net::MirrorDir);
- $Net::DownloadMirror::VERSION = '0.07';
+ $Net::DownloadMirror::VERSION = '0.08';
 #-------------------------------------------------
  sub _Init
  	{
@@ -43,66 +42,54 @@
  	return(1);
  	}
 #-------------------------------------------------
- sub Update
+ sub Download
  	{
  	my ($self) = @_;
-	return(0) if(!$self->Connect());
- 	my ($ref_h_remote_files, $ref_h_remote_dirs) = $self->ReadRemoteDir();
+	return(0) unless($self->Connect());
+ 	my ($rh_lf, $rh_ld) = $self->ReadLocalDir();
  	if($self->{_debug})
  		{
- 		print("remote files : $_\n") for(sort keys %{$ref_h_remote_files});
- 		print("remote dirs : $_\n") for(sort keys %{$ref_h_remote_dirs});
+ 		print("local files : $_\n") for(sort keys %{$rh_lf});
+ 		print("local dirs : $_\n") for(sort keys %{$rh_ld});
  		}
- 	my $ref_a_modified_remote_files = $self->CheckIfModified($ref_h_remote_files);
+ 	my ($rh_rf, $rh_rd) = $self->ReadRemoteDir();
  	if($self->{_debug})
  		{
- 		print("modified remote files : $_\n") for(@{$ref_a_modified_remote_files});
+ 		print("remote files : $_\n") for(sort keys %{$rh_rf});
+ 		print("remote dirs : $_\n") for(sort keys %{$rh_rd});
  		}
- 	$self->StoreFiles($ref_a_modified_remote_files);
- 	my ($ref_h_local_files, $ref_h_local_dirs) = $self->ReadLocalDir();
+ 	my $ra_rdnil = $self->RemoteNotInLocal($rh_ld, $rh_rd);
  	if($self->{_debug})
  		{
- 		print("local files : $_\n") for(sort keys %{$ref_h_local_files});
- 		print("local dirs : $_\n") for(sort keys %{$ref_h_local_dirs});
+ 		print("remote directories not in local: $_\n") for(@{$ra_rdnil});
  		}
- 	my $ref_a_new_remote_files = $self->RemoteNotInLocal(
- 		$ref_h_local_files,
- 		$ref_h_remote_files
- 		);
+ 	$self->MakeDirs($ra_rdnil);
+ 	my $ra_rfnil = $self->RemoteNotInLocal($rh_lf, $rh_rf);
  	if($self->{_debug})
  		{
- 		print("remote files not in local : $_\n") for(@{$ref_a_new_remote_files});
+ 		print("remote files not in local : $_\n") for(@{$ra_rfnil});
  		}
- 	$self->StoreFiles($ref_a_new_remote_files);
- 	my $ref_a_new_remote_dirs = $self->RemoteNotInLocal(
- 		$ref_h_local_dirs,
- 		$ref_h_remote_dirs
- 		);
+ 	$self->StoreFiles($ra_rfnil);
+ 	my $ra_mrf = $self->CheckIfModified($rh_rf);
  	if($self->{_debug})
  		{
- 		print("remote directories not in local : $_\n") for(@{$ref_a_new_remote_dirs});
+ 		print("modified remote files : $_\n") for(@{$ra_mrf});
  		}
- 	$self->MakeDirs($ref_a_new_remote_dirs);
+ 	$self->StoreFiles($ra_mrf);
  	if($self->{_delete} eq "enable")
  		{
- 		my $ref_a_deleted_remote_files = $self->LocalNotInRemote(
- 			$ref_h_local_files,
- 			$ref_h_remote_files
- 			);
+ 		my $ra_lfnir = $self->LocalNotInRemote($rh_lf, $rh_rf);
  		if($self->{_debug})
  			{
- 			print("local files not in remote : $_\n") for(@{$ref_a_deleted_remote_files});
+ 			print("local files not in remote: $_\n") for(@{$ra_lfnir});
  			}
- 		$self->DeleteFiles($ref_a_deleted_remote_files);
- 		my $ref_a_deleted_remote_dirs = $self->LocalNotInRemote(
- 			$ref_h_local_dirs,
- 			$ref_h_remote_dirs
- 			);
+ 		$self->DeleteFiles($ra_lfnir);
+ 		my $ra_ldnir = $self->LocalNotInRemote($rh_ld, $rh_rd);
  		if($self->{_debug})
  			{
- 			print("local directories not in remote : $_\n") for(@{$ref_a_deleted_remote_dirs});
+ 			print("local directories not in remote : $_\n") for(@{$ra_ldnir});
  			}
- 		$self->RemoveDirs($ref_a_deleted_remote_dirs);
+ 		$self->RemoveDirs($ra_ldnir);
  		}
  	$self->Quit();
  	return(1);
@@ -110,37 +97,33 @@
 #-------------------------------------------------
  sub CheckIfModified
  	{
- 	my ($self, $ref_h_remote_files) = @_;
- 	return([]) if(!$self->IsConnection());
- 	my (@modified_files, $modified_time);
- 	for my $path (keys(%{$ref_h_remote_files}))
+ 	my ($self, $rh_rf) = @_;
+ 	return([]) unless($self->IsConnection());
+ 	my @mf;
+ 	for my $rf (keys(%{$rh_rf}))
  		{
- 		$modified_time = $self->{_connection}->mdtm($path);
- 		next if(!$modified_time);
- 		$self->{_current_modified}{$path} = $modified_time;
- 		if(defined($self->{_last_modified}{$path}))
+ next unless($self->{_current_modified}{$rf} = $self->{_connection}->mdtm($rf));
+ 		if(defined($self->{_last_modified}{$rf}))
  			{
- 			next if($self->{_last_modified}{$path} eq $modified_time);
+ next if($self->{_last_modified}{$rf} eq $self->{_current_modified}{$rf});
  			} 
- 		push(@modified_files, $path);
+ 		push(@mf, $rf);
  		}
- 	return(\@modified_files);
+ 	return(\@mf);
  	}
 #-------------------------------------------------
  sub StoreFiles
  	{
- 	my ($self, $ref_a_files) = @_;
- 	return(0) if(!$self->IsConnection() or !@{$ref_a_files});
- 	my ($l_path, $r_path, $name, $path, $sufix);
- 	for(@{$ref_a_files})
+ 	my ($self, $ra_rf) = @_;
+ 	return(0) unless(@{$ra_rf} && $self->IsConnection());
+ 	my $lf;
+ 	for my $rf (@{$ra_rf})
  		{
- 		$l_path = $r_path = $_;
- 		$l_path =~ s!$self->{_regex_remotedir}!$self->{_localdir}!;
- 		($name, $path, $sufix) = fileparse($l_path);
- 		mkpath($path) if(!(-d $path));
- 		$self->{_connection}->cwd();
- 		$self->{_connection}->get($r_path, $l_path);
- 		$self->{_last_modified}{$r_path} = $self->{_connection}->mdtm($r_path);
+ 		$lf = $rf;
+ 		$lf =~ s!$self->{_regex_remotedir}!$self->{_localdir}!;
+ 		next unless($self->{_connection}->get($rf, $lf));
+ $self->{_last_modified}{$rf} = 
+ 	$self->{_current_modified}{$rf} || $self->{_connection}->mdtm($rf);
  		}
  	store($self->{_last_modified}, $self->{_filename});
  	return(1);
@@ -148,28 +131,29 @@
 #-------------------------------------------------
  sub MakeDirs
  	{
- 	my ($self, $ref_a_dirs) = @_;
- 	return(0) if(!@{$ref_a_dirs});
- 	for(@{$ref_a_dirs})
+ 	my ($self, $ra_rd) = @_;
+ 	return(0) unless(@{$ra_rd});
+ 	for(@{$ra_rd})
  		{
  		s!$self->{_regex_remotedir}!$self->{_localdir}!;
- 		mkpath($_) if(!(-d $_));
+ 		mkpath($_, $self->{_debug}) unless(-d $_);
  		}
  	return(1);
  	}
 #-------------------------------------------------
  sub DeleteFiles
  	{
- 	my ($self, $ref_a_files) = @_;
- 	return(0) if(!($self->{_delete} eq "enable") or !@{$ref_a_files});
-	my ($l_path, $r_path);
- 	for(@{$ref_a_files})
+ 	my ($self, $ra_lf) = @_;
+ 	return(0) unless(($self->{_delete} eq "enable") && @{$ra_lf});
+	my $rf;
+ 	for my $lf (@{$ra_lf})
  		{
- 		$l_path = $r_path = $_; 
- 		$r_path =~ s!$self->{_regex_localdir}!$self->{_remotedir}!;
- 		next if(!(-f $l_path));
- 		warn("can not unlink : $l_path\n") if(!(unlink($l_path)));
- 		delete($self->{_last_modified}{$r_path}) if(defined($self->{_last_modified}{$r_path}));
+ 		$rf = $lf; 
+ 		next unless(-f $lf);
+ 		warn("can not unlink : $lf\n") unless(unlink($lf));
+ 		$rf =~ s!$self->{_regex_localdir}!$self->{_remotedir}!;
+ 		delete($self->{_last_modified}{$rf})
+ 			if(defined($self->{_last_modified}{$rf}));
  		}
  	store($self->{_last_modified}, $self->{_filename});
  	return(1);
@@ -177,11 +161,11 @@
 #-------------------------------------------------
  sub RemoveDirs
  	{
- 	my ($self, $ref_a_files) = @_;
- 	return(0) if(!($self->{_delete} eq "enable") or !@{$ref_a_files});
- 	for(@{$ref_a_files})
+ 	my ($self, $ra_ld) = @_;
+ 	return(0) unless(($self->{_delete} eq "enable") && @{$ra_ld});
+ 	for(@{$ra_ld})
  		{
- 		next if(!(-d $_));
+ 		next unless(-d $_);
  		rmtree($_, $self->{_debug}, 1);
  		}
  	return(1);
@@ -203,7 +187,7 @@ Net::DownloadMirror - Perl extension for mirroring a remote location via FTP to 
  	usr		=> "my_ftp_usr_name",
  	pass		=> "my_ftp_password",
  	);
- $um->Update();
+ $um->Download();
  
  or more detailed
  my $md = Net::DownloadMirror->new(
@@ -226,15 +210,16 @@ Net::DownloadMirror - Perl extension for mirroring a remote location via FTP to 
 # or you can use regular expressions
 # 	exclusinos	=> [qr/SYSTEM/i, $regex]
 # 	subset		=> {qr/(?i:HOME)(?i:PAGE)?/, $regex]
- 	file_name	=> "modified_times",
+ 	filename		=> "modified_times",
  	);
- $um->Update();
+ $um->Download();
 
 =head1 DESCRIPTION
 
 This module is for mirroring a remote location to a local directory via FTP.
 For example websites, documentations or developmentstuff which ones were
-uploaded or changed in the net. It is not developt for mirroring large archivs.
+uploaded or changed in the net. Local files will be overwritten,
+also in case they are newer. It is not developt for mirroring large archivs.
 But there are not in principle any limits.
 
 =head1 Constructor and Initialization
@@ -250,12 +235,12 @@ But there are not in principle any limits.
  This function is called by the constructor.
  You do not need to call this function by yourself.
 
-=item (1|0)Update(void)
+=item (1|0)Downlaod(void)
  Call this function for mirroring automatically, recommended!!!
 
 =item (ref_hash_modified_files)CheckIfModified(ref_list_local_files)
  Takes a hashreference of remoe filenames to compare the last modification time,
- which is stored in a file, named by the attribute "filename", while uploading. 
+ which is stored in a file, named by the attribute "filename", while downloading. 
  Returns a reference of a list.
 
 =item (1|0)StoreFiles(ref_array_paths)
@@ -272,7 +257,7 @@ But there are not in principle any limits.
 
 =head2 optional optiones
 
-=item file_name
+=item filename
  The name of the file in which the last modified times will be stored.
  default = "lastmodified_remote"
 
@@ -293,10 +278,9 @@ http://www.planet-interkom.de/t.knorr/index.html
 
 =head1 FILES
 
-Net::MirrorDir
-Storable
-File::Basename
-File::Path
+ Net::MirrorDir
+ Storable
+ File::Path
 
 =head1 BUGS
 
@@ -320,12 +304,4 @@ at your option, any later version of Perl 5 you may have available.
 
 
 =cut
-
-
-
-
-
-
-
-
 
