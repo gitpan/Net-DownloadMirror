@@ -25,12 +25,12 @@
 #-------------------------------------------------
  package Net::DownloadMirror;
 #------------------------------------------------
- use Net::MirrorDir 0.18;
+ use Net::MirrorDir 0.19;
  use File::Path;
  use Storable;
 #------------------------------------------------
  @Net::DownloadMirror::ISA = qw(Net::MirrorDir);
- $Net::DownloadMirror::VERSION = '0.08';
+ $Net::DownloadMirror::VERSION = '0.09';
 #-------------------------------------------------
  sub _Init
  	{
@@ -39,13 +39,13 @@
  	$self->{_filename}		= $arg{filename}	|| "lastmodified_remote";
  	$self->{_delete}		= $arg{delete}	|| "disabled";
  	$self->{_current_modified}	= {};
- 	return(1);
+ 	return 1;
  	}
 #-------------------------------------------------
  sub Download
  	{
  	my ($self) = @_;
-	return(0) unless($self->Connect());
+	return 0 unless($self->Connect());
  	my ($rh_lf, $rh_ld) = $self->ReadLocalDir();
  	if($self->{_debug})
  		{
@@ -92,13 +92,13 @@
  		$self->RemoveDirs($ra_ldnir);
  		}
  	$self->Quit();
- 	return(1);
+ 	return 1;
  	}
 #-------------------------------------------------
  sub CheckIfModified
  	{
  	my ($self, $rh_rf) = @_;
- 	return([]) unless($self->IsConnection());
+ 	return [] unless($self->IsConnection());
  	my @mf;
  	for my $rf (keys(%{$rh_rf}))
  		{
@@ -109,13 +109,13 @@
  			} 
  		push(@mf, $rf);
  		}
- 	return(\@mf);
+ 	return \@mf;
  	}
 #-------------------------------------------------
  sub StoreFiles
  	{
  	my ($self, $ra_rf) = @_;
- 	return(0) unless(@{$ra_rf} && $self->IsConnection());
+ 	return 0 unless(@{$ra_rf} && $self->IsConnection());
  	my $lf;
  	for my $rf (@{$ra_rf})
  		{
@@ -126,25 +126,25 @@
  	$self->{_current_modified}{$rf} || $self->{_connection}->mdtm($rf);
  		}
  	store($self->{_last_modified}, $self->{_filename});
- 	return(1);
+ 	return 1;
  	}
 #-------------------------------------------------
  sub MakeDirs
  	{
  	my ($self, $ra_rd) = @_;
- 	return(0) unless(@{$ra_rd});
+ 	return 0 unless(@{$ra_rd});
  	for(@{$ra_rd})
  		{
  		s!$self->{_regex_remotedir}!$self->{_localdir}!;
  		mkpath($_, $self->{_debug}) unless(-d $_);
  		}
- 	return(1);
+ 	return 1;
  	}
 #-------------------------------------------------
  sub DeleteFiles
  	{
  	my ($self, $ra_lf) = @_;
- 	return(0) unless(($self->{_delete} eq "enable") && @{$ra_lf});
+ 	return 0 unless(($self->{_delete} eq "enable") && @{$ra_lf});
 	my $rf;
  	for my $lf (@{$ra_lf})
  		{
@@ -156,19 +156,19 @@
  			if(defined($self->{_last_modified}{$rf}));
  		}
  	store($self->{_last_modified}, $self->{_filename});
- 	return(1);
+ 	return 1;
  	} 
 #-------------------------------------------------
  sub RemoveDirs
  	{
  	my ($self, $ra_ld) = @_;
- 	return(0) unless(($self->{_delete} eq "enable") && @{$ra_ld});
+ 	return 0 unless(($self->{_delete} eq "enable") && @{$ra_ld});
  	for(@{$ra_ld})
  		{
  		next unless(-d $_);
  		rmtree($_, $self->{_debug}, 1);
  		}
- 	return(1);
+ 	return 1;
  	}
 #------------------------------------------------
 1;
@@ -184,7 +184,7 @@ Net::DownloadMirror - Perl extension for mirroring a remote location via FTP to 
   use Net::DownloadMirror;
   my $um = Net::DownloadMirror->new(
  	ftpserver		=> "my_ftp.hostname.com",
- 	usr		=> "my_ftp_usr_name",
+ 	user		=> "my_ftp_user_name",
  	pass		=> "my_ftp_password",
  	);
  $um->Download();
@@ -192,7 +192,7 @@ Net::DownloadMirror - Perl extension for mirroring a remote location via FTP to 
  or more detailed
  my $md = Net::DownloadMirror->new(
  	ftpserver		=> "my_ftp.hostname.com",
- 	usr		=> "my_ftp_usr_name",
+ 	user		=> "my_ftp_user_name",
  	pass		=> "my_ftp_password",
  	localdir		=> "home/nameA/homepageA",
  	remotedir	=> "public",
@@ -302,6 +302,4 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.9.2 or,
 at your option, any later version of Perl 5 you may have available.
 
-
 =cut
-

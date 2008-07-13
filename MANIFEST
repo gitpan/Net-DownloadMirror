@@ -4,7 +4,7 @@ MANIFEST
 README
 t/Net-DownloadMirror.t
 lib/Net/DownloadMirror.pm
-TestA/lnir.txt
 META.yml                                 Module meta-data (added by MakeMaker)
+
 
 

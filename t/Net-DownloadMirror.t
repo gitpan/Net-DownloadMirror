@@ -19,7 +19,7 @@ BEGIN { use_ok('Net::DownloadMirror') };
  	localdir		=> "TestA",
  	remotedir	=> "TestD",
  	ftpserver		=> "www.net.de",
- 	usr		=> 'e-mail@address.de',
+ 	user		=> 'e-mail@address.de',
  	pass		=> "xyz", 	
  	);
 #-------------------------------------------------
@@ -113,7 +113,7 @@ BEGIN { use_ok('Net::DownloadMirror') };
  		localdir		=> 'TestA',
  		remotedir	=> '/authors/id/K/KN/KNORR/Remote/TestA',
  		ftpserver		=> 'www.cpan.org',
- 		usr		=> 'anonymous',
+ 		user		=> 'anonymous',
  		pass		=> 'create-soft@tiscali.de', 	
  		exclusions	=> ['CHECKSUMS']
  		);
@@ -157,7 +157,7 @@ BEGIN { use_ok('Net::DownloadMirror') };
  		localdir		=> $l,
  		remotedir	=> $r,
  		ftpserver		=> $s,
- 		usr		=> $u,
+ 		user		=> $u,
  		pass		=> $p, 	
  		filename		=> "mtimes"
  		));
@@ -165,6 +165,7 @@ BEGIN { use_ok('Net::DownloadMirror') };
 	select($oldfh);
  	}
 #-------------------------------------------------
+
 
 
 

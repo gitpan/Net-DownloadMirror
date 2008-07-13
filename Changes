@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::DownloadMirror.
 
+0.09 Sun Jul  6 20:22:58 2008 
+ 	- changes in the documentation
+
 0.08 Sun Apr  6 09:24:04 2008 
  	- code improvements
  	- change function Update() to Download()
@@ -35,6 +38,8 @@ Revision history for Perl extension Net::DownloadMirror.
 0.01  Wed Jan  4 09:55:21 2006
 	- original version; created by h2xs 1.23 with options
 		-AXn Net::DownloadMirror
+
+
 
 
 
