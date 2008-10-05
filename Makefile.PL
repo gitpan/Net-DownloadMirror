@@ -14,9 +14,3 @@ WriteMakefile(
  	AUTHOR	=> 'Torsten Knorr <create-soft@tiscali.de>') : ()),
  	);
 #------------------------------------------------
-
-
-
-
-
-

@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::DownloadMirror.
 
+0.10 Fri Sep 19 15:26:42 2008
+	- add methods CleanUp(), LtoR(), RtoL(), UpdateLastModified()
+ 	- now we do not call the function CheckIfModified() for
+ 	remotepaths not in local directory  
+
 0.09 Sun Jul  6 20:22:58 2008 
  	- changes in the documentation
 
@@ -38,19 +43,3 @@ Revision history for Perl extension Net::DownloadMirror.
 0.01  Wed Jan  4 09:55:21 2006
 	- original version; created by h2xs 1.23 with options
 		-AXn Net::DownloadMirror
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
